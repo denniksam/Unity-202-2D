@@ -5,7 +5,7 @@ using UnityEngine;
 public class PipeScript : MonoBehaviour
 {
     // [SerializeField]
-    private float pipeVelocity = 1f;
+    private float pipeVelocity = 1.5f;
 
     void Start()
     {
@@ -20,6 +20,5 @@ public class PipeScript : MonoBehaviour
                 pipeVelocity         //  масштаб - швидкість
                 * Time.deltaTime     //  корекція на час - FPS незалежність
                 * Vector2.left);     //  напрям - вліво
-
     }
 }

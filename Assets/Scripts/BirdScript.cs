@@ -6,25 +6,34 @@ public class BirdScript : MonoBehaviour
 {
     private float discreteForceFactor  = 300f;     // дискретне управління - багаторазовим натисненням
     private float continualForceFactor = 10f;      // неперервне - утримуючи клавішу натисненою
+    // private float vitalityTime = 20f;  // 20 секунд на життя
     private Rigidbody2D body;
 
     void Start()
     {
         body = this.GetComponent<Rigidbody2D>();
+        GameState.pipesPassed = 0;
+        GameState.vitality = 0.85f;
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            body.AddForce(Vector2.up * discreteForceFactor);
+            body.AddForce(discreteForceFactor * Time.timeScale * Vector2.up);
         }
-        if (Input.GetKey(KeyCode.W))
+        if (GameState.isWkeyEnabled && Input.GetKey(KeyCode.W))
         {
-            body.AddForce(Vector2.up * continualForceFactor);
+            body.AddForce(continualForceFactor * Time.timeScale * Vector2.up);
         }
 
         this.transform.eulerAngles = new Vector3(0, 0, 3f * body.velocity.y);
+
+        GameState.vitality -= Time.deltaTime / GameState.vitalityPeriod;
+        if(GameState.vitality <= 0)
+        {
+            GameState.vitality = 1f;
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -33,7 +42,24 @@ public class BirdScript : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        // Debug.Log("Trigger: " + other.gameObject.name);
+        Transform parent = other.gameObject.transform.parent;
+        if(parent != null && parent.gameObject.CompareTag("Pipe"))
+        {
+            // Це труба
+        }
+        if (other.gameObject.CompareTag("Food"))
+        {
+            // Це їжа
+            GameState.vitality = 1f;
+            GameObject.Destroy(other.gameObject);
+        }
+    }
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.CompareTag("Pipe"))
+        {
+            GameState.pipesPassed += 1;
+        }
     }
 }
 /* Взаємодія об'єктів
