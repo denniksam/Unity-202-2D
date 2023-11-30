@@ -19,7 +19,7 @@ public class DestroyScript : MonoBehaviour
         }
         else
         {
-            GameState.Destroy( other.gameObject );
+            GameObject.Destroy( other.gameObject );
         }
     }
 }

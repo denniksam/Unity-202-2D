@@ -16,22 +16,38 @@ public class MenuScript : MonoBehaviour
     private Slider vitalityPeriodSlider;
 
     private bool isMenuShown;
+    private const String settingsFilename = "./Assets/Files/settings.json";
 
     void Start()
     {
-        GameState.isWkeyEnabled = keyWToggle.isOn;
-        OnPipePeriodSlider(pipePeriodSlider.value);
-        OnVitalityPeriodSlider(vitalityPeriodSlider.value);
+        if (LoadSettings())  // зчитані налаштування - ставимо їх на UI
+        {
+            keyWToggle.isOn = GameState.isWkeyEnabled;
+            pipePeriodSlider.value = (6f - GameState.pipeSpawnPeriod) / (6f - 2f);
+            vitalityPeriodSlider.value = (60f - GameState.vitalityPeriod) / (60f - 20f);
+        }
+        else  // немає збережених налаштувань - беремо дані з UI
+        {
+            GameState.isWkeyEnabled = keyWToggle.isOn;
+            OnPipePeriodSlider(pipePeriodSlider.value);
+            OnVitalityPeriodSlider(vitalityPeriodSlider.value);
+        }
 
         isMenuShown = content.activeInHierarchy;
-        ToggleMenu(isMenuShown);
+        ToggleMenu(isMenuShown);        
     }
-
     void Update()
     {
         if(Input.GetKeyUp(KeyCode.Escape))
         {
             ToggleMenu( ! isMenuShown);
+        }
+    }
+    private void LateUpdate()
+    {
+        if(GameState.isPipeHitted)
+        {
+            ToggleMenu(true);
         }
     }
     private void ToggleMenu(bool isShow)
@@ -47,9 +63,31 @@ public class MenuScript : MonoBehaviour
             Time.timeScale = 1f;
             isMenuShown = false;
             content.SetActive(false);
+            if(GameState.isPipeHitted )
+            {
+                // --life
+                foreach (var pipe in GameObject.FindGameObjectsWithTag("Pipe"))
+                {
+                    GameObject.Destroy(pipe);
+                }
+                GameState.isPipeHitted = false;
+            }
         }
     }
-
+    private void SaveSettings()
+    {
+        System.IO.File.WriteAllText(settingsFilename, GameState.ToJson());
+    }
+    private bool LoadSettings()
+    {
+        if (System.IO.File.Exists(settingsFilename))
+        {
+            GameState.FromJson(
+                System.IO.File.ReadAllText(settingsFilename));
+            return true;
+        }
+        return false;
+    }
 
     // UI Event handlers
     public void OnCloseButtonClick()
@@ -59,15 +97,18 @@ public class MenuScript : MonoBehaviour
     public void OnControlWkeyChanged(Boolean value)
     {
         GameState.isWkeyEnabled = value;
+        SaveSettings();
     }
     public void OnPipePeriodSlider(Single value)
     {
         // value[0..1] ---> time [6..2]
         GameState.pipeSpawnPeriod = 6f - value * (6f - 2f);
+        SaveSettings();
     }
     public void OnVitalityPeriodSlider(Single value)
     {
         // value[0..1] ---> time [60..20]
         GameState.vitalityPeriod = 60f - value * (60f - 20f);
+        SaveSettings();
     }
 }

@@ -46,6 +46,7 @@ public class BirdScript : MonoBehaviour
         if(parent != null && parent.gameObject.CompareTag("Pipe"))
         {
             // Це труба
+            GameState.isPipeHitted = true;
         }
         if (other.gameObject.CompareTag("Food"))
         {
